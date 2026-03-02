@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI株スクリーナー Pro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
+  :root {
+    --bg:#0a0e1a; --surface:#111827; --surface2:#1a2234; --border:#2a3a55;
+    --accent:#00d4aa; --accent2:#ff6b6b; --accent3:#ffd166; --accent4:#a78bfa;
+    --text:#e2e8f0; --text-muted:#64748b; --text-dim:#94a3b8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+    background-image:radial-gradient(ellipse at 20% 20%,rgba(0,212,170,.06) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 80%,rgba(255,107,107,.04) 0%,transparent 50%);}
+  header{border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;
+    gap:12px;background:rgba(17,24,39,.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100;flex-wrap:wrap;}
+  .logo{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--accent);}
+  .logo span{color:var(--text-muted);font-weight:400;}
+  .badge{background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.3);color:var(--accent);
+    font-size:11px;padding:3px 9px;border-radius:20px;font-family:'Space Mono',monospace;}
+  .badge-pro{background:rgba(255,209,102,.12);border:1px solid rgba(255,209,102,.4);color:var(--accent3);
+    font-size:11px;padding:3px 9px;border-radius:20px;font-family:'Space Mono',monospace;}
+  .header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+  .usage-badge{font-family:'Space Mono',monospace;font-size:11px;padding:4px 12px;border-radius:20px;
+    border:1px solid var(--border);color:var(--text-muted);cursor:pointer;transition:all .2s;}
+  .usage-badge:hover{border-color:var(--accent);color:var(--accent);}
+  .settings-btn{background:none;border:1px solid var(--border);color:var(--text-muted);padding:5px 12px;
+    border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s;}
+  .settings-btn:hover{border-color:var(--accent4);color:var(--accent4);}
+  main{max-width:940px;margin:0 auto;padding:24px 16px;}
+  .tabs{display:flex;gap:3px;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;padding:4px;overflow-x:auto;}
+  .tab{flex:1;min-width:80px;padding:9px 6px;border:none;background:none;color:var(--text-muted);cursor:pointer;
+    border-radius:7px;font-size:12px;font-family:'Noto Sans JP',sans-serif;font-weight:500;transition:all .2s;white-space:nowrap;}
+  .tab.active{background:var(--surface2);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3);}
+  .tab-content{display:none;} .tab-content.active{display:block;}
+  h2{font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;
+    margin-bottom:13px;font-family:'Space Mono',monospace;}
+  .section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px;}
+  @media(max-width:600px){.grid-2,.grid-3{grid-template-columns:1fr 1fr;}}
+  label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:6px;font-weight:500;}
+  .range-group{display:flex;gap:6px;align-items:center;}
+  .sep{color:var(--text-muted);font-size:12px;white-space:nowrap;}
+  input[type="number"],input[type="text"],input[type="password"],textarea,select{
+    width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);
+    padding:9px 12px;border-radius:8px;font-size:14px;font-family:'Noto Sans JP',sans-serif;transition:border-color .2s;}
+  input[type="number"]{font-family:'Space Mono',monospace;-moz-appearance:textfield;}
+  input[type="number"]::-webkit-outer-spin-button,input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,170,.1);}
+  textarea{resize:vertical;min-height:65px;}
+  select{cursor:pointer;}
+  .toggle-row{display:flex;flex-wrap:wrap;gap:7px;}
+  .toggle-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);
+    padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;transition:all .2s;font-family:'Noto Sans JP',sans-serif;}
+  .toggle-btn.active{background:rgba(0,212,170,.1);border-color:var(--accent);color:var(--accent);}
+  .style-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .style-card{flex:1;min-width:100px;background:var(--surface2);border:2px solid var(--border);
+    border-radius:10px;padding:11px;cursor:pointer;text-align:center;transition:all .2s;}
+  .style-card.active{border-color:var(--accent);background:rgba(0,212,170,.08);}
+  .style-card .icon{font-size:20px;margin-bottom:4px;}
+  .style-card .name{font-size:12px;font-weight:500;}
+  .style-card .desc{font-size:10px;color:var(--text-muted);margin-top:2px;}
+  .trend-panel{background:linear-gradient(135deg,rgba(0,212,170,.06),rgba(255,209,102,.04));
+    border:1px solid rgba(0,212,170,.25);border-radius:10px;padding:14px 18px;margin-bottom:16px;
+    position:relative;overflow:hidden;}
+  .trend-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--accent),var(--accent3));}
+  .trend-title{font-size:11px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:7px;}
+  .trend-text{font-size:13px;color:var(--text-dim);line-height:1.7;white-space:pre-wrap;}
+  .trend-empty{font-size:12px;color:var(--text-muted);font-style:italic;}
+  .run-btn{width:100%;background:linear-gradient(135deg,var(--accent),#00b894);color:#0a0e1a;
+    border:none;padding:14px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;
+    font-family:'Noto Sans JP',sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:9px;}
+  .run-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,212,170,.3);}
+  .run-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+  .result-section{display:none;animation:fadeIn .4s ease;margin-top:20px;}
+  .result-section.show{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  .ai-output{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:22px;line-height:1.85;font-size:14px;white-space:pre-wrap;position:relative;overflow:hidden;}
+  .ai-output::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));}
+  .ai-label{display:flex;align-items:center;gap:9px;margin-bottom:13px;padding-bottom:13px;border-bottom:1px solid var(--border);}
+  .ai-dot{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:pulse 1.5s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .memo-section{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:15px;margin-top:13px;}
+  .memo-label{font-size:11px;color:var(--text-muted);margin-bottom:9px;font-family:'Space Mono',monospace;}
+  .memo-btns{display:flex;gap:7px;margin-bottom:9px;}
+  .memo-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);
+    color:var(--text-dim);cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;transition:all .2s;}
+  .memo-btn.good.active{background:rgba(0,212,170,.12);border-color:var(--accent);color:var(--accent);}
+  .memo-btn.bad.active{background:rgba(255,107,107,.12);border-color:var(--accent2);color:var(--accent2);}
+  .memo-save-btn{margin-top:7px;background:rgba(0,212,170,.1);border:1px solid var(--accent);
+    color:var(--accent);padding:7px 18px;border-radius:8px;font-size:12px;cursor:pointer;
+    font-family:'Noto Sans JP',sans-serif;transition:all .2s;}
+  .memo-save-btn:hover{background:rgba(0,212,170,.2);}
+  .loading{display:flex;align-items:center;gap:11px;color:var(--text-muted);font-size:13px;}
+  .spinner{width:17px;height:17px;border:2px solid var(--border);border-top-color:var(--accent);
+    border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* 銘柄調査 */
+  .stock-input-row{display:flex;gap:10px;align-items:flex-end;}
+  .stock-input-row input{flex:1;}
+  .search-btn{background:linear-gradient(135deg,var(--accent4),#7c3aed);color:#fff;border:none;
+    padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;
+    font-family:'Noto Sans JP',sans-serif;white-space:nowrap;transition:all .2s;}
+  .search-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(167,139,250,.4);}
+  .search-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+  /* iSpeed コピー出力 */
+  .ispeed-output{background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:20px;
+    margin-top:14px;position:relative;}
+  .ispeed-label{font-family:'Space Mono',monospace;font-size:11px;color:#58a6ff;margin-bottom:10px;
+    display:flex;align-items:center;gap:8px;}
+  .ispeed-text{font-family:'Space Mono',monospace;font-size:13px;color:#c9d1d9;line-height:1.8;
+    white-space:pre-wrap;word-break:break-all;}
+  .copy-ispeed-btn{position:absolute;top:14px;right:14px;background:#21262d;border:1px solid #30363d;
+    color:#8b949e;padding:6px 14px;border-radius:7px;font-size:12px;cursor:pointer;
+    font-family:'Space Mono',monospace;transition:all .2s;}
+  .copy-ispeed-btn:hover{border-color:#58a6ff;color:#58a6ff;}
+
+  /* HISTORY */
+  .history-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+    padding:13px 15px;margin-bottom:9px;}
+  .history-header{display:flex;justify-content:space-between;align-items:flex-start;}
+  .history-meta{font-size:11px;color:var(--text-muted);font-family:'Space Mono',monospace;margin-bottom:3px;}
+  .history-summary{font-size:13px;color:var(--text-dim);}
+  .history-eval{display:inline-block;font-size:11px;margin-top:5px;padding:2px 9px;border-radius:12px;}
+  .eval-good{background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.3);color:var(--accent);}
+  .eval-bad{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.3);color:var(--accent2);}
+  .history-memo{font-size:11px;color:var(--text-muted);margin-top:4px;font-style:italic;}
+  .history-actions{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
+  .h-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);
+    padding:5px 12px;border-radius:7px;font-size:11px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .2s;}
+  .h-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .del-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;
+    padding:2px 7px;transition:color .2s;}
+  .del-btn:hover{color:var(--accent2);}
+
+  /* TREND TAB */
+  .trend-summary-output{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:22px;font-size:13px;line-height:1.85;white-space:pre-wrap;position:relative;overflow:hidden;min-height:70px;}
+  .trend-summary-output::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--accent3),var(--accent));}
+  .analyze-trend-btn{background:rgba(255,209,102,.1);border:1px solid var(--accent3);color:var(--accent3);
+    padding:10px 22px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;
+    font-family:'Noto Sans JP',sans-serif;transition:all .2s;display:flex;align-items:center;gap:7px;margin-bottom:14px;}
+  .analyze-trend-btn:hover{background:rgba(255,209,102,.18);}
+  .analyze-trend-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+  .stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;}
+  .stat-num{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--accent);}
+  .stat-label{font-size:10px;color:var(--text-muted);margin-top:2px;}
+
+  /* SETTINGS */
+  .settings-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;}
+  .api-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 12px;
+    border-radius:20px;margin-top:10px;}
+  .api-status.ok{background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.3);color:var(--accent);}
+  .api-status.none{background:rgba(100,116,139,.1);border:1px solid rgba(100,116,139,.3);color:var(--text-muted);}
+  .save-key-btn{background:rgba(167,139,250,.1);border:1px solid var(--accent4);color:var(--accent4);
+    padding:8px 20px;border-radius:8px;font-size:13px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;
+    transition:all .2s;margin-top:10px;}
+  .save-key-btn:hover{background:rgba(167,139,250,.2);}
+  .clear-key-btn{background:none;border:1px solid var(--border);color:var(--text-muted);
+    padding:8px 16px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;
+    transition:all .2s;margin-top:10px;margin-left:8px;}
+  .clear-key-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+  .info-box{background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.2);border-radius:8px;
+    padding:13px 16px;font-size:12px;color:var(--text-dim);line-height:1.7;margin-top:10px;}
+  .info-box a{color:var(--accent4);text-decoration:none;}
+  .info-box a:hover{text-decoration:underline;}
+
+  /* USAGE BAR */
+  .usage-panel{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:16px;}
+  .usage-title{font-size:11px;color:var(--text-muted);font-family:'Space Mono',monospace;margin-bottom:10px;}
+  .usage-bars{display:flex;flex-direction:column;gap:8px;}
+  .usage-bar-row{display:flex;align-items:center;gap:10px;}
+  .usage-bar-label{font-size:12px;color:var(--text-dim);width:70px;flex-shrink:0;}
+  .usage-bar-bg{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+  .usage-bar-fill{height:100%;border-radius:3px;transition:width .5s;}
+  .usage-bar-count{font-family:'Space Mono',monospace;font-size:11px;color:var(--text-muted);width:60px;text-align:right;flex-shrink:0;}
+  .usage-note{font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6;}
+
+  /* 画像アップロード */
+  .image-upload-area{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;
+    cursor:pointer;transition:all .2s;background:var(--surface2);margin-top:12px;position:relative;}
+  .image-upload-area:hover,.image-upload-area.dragover{border-color:var(--accent4);background:rgba(167,139,250,.06);}
+  .image-upload-area input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .upload-icon{font-size:28px;margin-bottom:8px;}
+  .upload-text{font-size:13px;color:var(--text-dim);}
+  .upload-hint{font-size:11px;color:var(--text-muted);margin-top:4px;}
+  .image-previews{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+  .image-preview-item{position:relative;width:100px;height:100px;border-radius:8px;overflow:hidden;
+    border:1px solid var(--border);flex-shrink:0;}
+  .image-preview-item img{width:100%;height:100%;object-fit:cover;}
+  .image-preview-item .remove-img{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);
+    border:none;color:#fff;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:11px;
+    display:flex;align-items:center;justify-content:center;line-height:1;}
+  .image-count-badge{background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);
+    color:var(--accent4);font-size:11px;padding:3px 10px;border-radius:12px;margin-top:8px;display:inline-block;}
+
+  /* misc */
+  .copy-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);
+    padding:6px 14px;border-radius:8px;font-size:11px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;
+    transition:all .2s;margin-top:11px;display:inline-block;}
+  .copy-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .disclaimer{background:rgba(255,107,107,.06);border:1px solid rgba(255,107,107,.2);border-radius:8px;
+    padding:10px 14px;font-size:11px;color:var(--text-muted);margin-top:11px;line-height:1.6;}
+  .disclaimer strong{color:var(--accent2);}
+  .empty-state{text-align:center;color:var(--text-muted);font-size:13px;padding:28px;}
+  .section-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;}
+  .clear-btn{background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;
+    font-family:'Noto Sans JP',sans-serif;transition:color .2s;}
+  .clear-btn:hover{color:var(--accent2);}
+  .ai-engine-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-family:'Space Mono',monospace;}
+  .engine-claude{background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.3);color:var(--accent);}
+  .engine-gemini{background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.3);color:var(--accent3);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">AI<span>/</span>株スクリーナー</div>
+  <div class="badge">東証 · AI分析</div>
+  <div class="badge-pro">⭐ PRO</div>
+  <div class="header-right">
+    <div class="usage-badge" onclick="switchTab('settings')" id="usageBadgeHeader">📊 使用: 0回</div>
+    <button class="settings-btn" onclick="switchTab('settings')">⚙️ 設定</button>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('screen')">📊 スクリーニング</button>
+    <button class="tab" onclick="switchTab('research')">🔍 銘柄調査</button>
+    <button class="tab" onclick="switchTab('history')">📋 履歴</button>
+    <button class="tab" onclick="switchTab('trend')">📈 傾向分析</button>
+    <button class="tab" onclick="switchTab('settings')">⚙️ 設定</button>
+  </div>
+
+  <!-- ========== TAB: スクリーニング ========== -->
+  <div class="tab-content active" id="tab-screen">
+    <div class="trend-panel" id="trendPanel">
+      <div class="trend-title">🧠 あなたの過去の投資傾向（AI自動まとめ）</div>
+      <div id="trendSummary"><span class="trend-empty">まだデータがありません。分析を重ねると傾向が蓄積・表示されます。</span></div>
+    </div>
+
+    <div class="section">
+      <h2>📊 バリュー指標</h2>
+      <div class="grid-3">
+        <div><label>PER（倍）</label>
+          <div class="range-group"><input type="number" id="per_min" placeholder="最小"><span class="sep">〜</span><input type="number" id="per_max" placeholder="最大"></div></div>
+        <div><label>PBR（倍）</label>
+          <div class="range-group"><input type="number" id="pbr_min" placeholder="最小" step="0.1"><span class="sep">〜</span><input type="number" id="pbr_max" placeholder="最大" step="0.1"></div></div>
+        <div><label>配当利回り（%）</label>
+          <div class="range-group"><input type="number" id="div_min" placeholder="最小" step="0.1"><span class="sep">〜</span><input type="number" id="div_max" placeholder="最大" step="0.1"></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📈 テクニカル・成長指標</h2>
+      <div class="grid-2">
+        <div><label>ROE（%）最低ライン</label><input type="number" id="roe_min" placeholder="例：10"></div>
+        <div><label>売上成長率（%）最低ライン</label><input type="number" id="growth_min" placeholder="例：5"></div>
+      </div>
+      <div style="margin-top:13px"><label>テクニカル条件</label>
+        <div class="toggle-row">
+          <button class="toggle-btn" data-val="上昇トレンド（25日移動平均線を上回っている）" onclick="toggleBtn(this)">📈 上昇トレンド</button>
+          <button class="toggle-btn" data-val="52週高値圏（80%以上）" onclick="toggleBtn(this)">🏔️ 52週高値圏</button>
+          <button class="toggle-btn" data-val="出来高増加傾向" onclick="toggleBtn(this)">📊 出来高増加</button>
+          <button class="toggle-btn" data-val="RSI適正範囲（30〜70）" onclick="toggleBtn(this)">⚖️ RSI適正</button>
+          <button class="toggle-btn" data-val="ゴールデンクロス（25日が75日を上抜け）" onclick="toggleBtn(this)">✨ ゴールデンクロス</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🎯 投資スタイル</h2>
+      <div class="style-row">
+        <div class="style-card" data-style="バリュー投資（割安優良株を長期保有）" onclick="selectStyle(this)">
+          <div class="icon">💎</div><div class="name">バリュー</div><div class="desc">割安長期</div></div>
+        <div class="style-card" data-style="グロース投資（高成長企業への中長期投資）" onclick="selectStyle(this)">
+          <div class="icon">🚀</div><div class="name">グロース</div><div class="desc">高成長</div></div>
+        <div class="style-card" data-style="配当投資（高配当・安定配当企業）" onclick="selectStyle(this)">
+          <div class="icon">💰</div><div class="name">高配当</div><div class="desc">安定配当</div></div>
+        <div class="style-card" data-style="モメンタム投資（上昇トレンドの短中期トレード）" onclick="selectStyle(this)">
+          <div class="icon">⚡</div><div class="name">モメンタム</div><div class="desc">トレンド</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>💬 追加コメント</h2>
+      <textarea id="comment" placeholder="例：特定セクターに絞りたい、リスク低め、初心者向けに説明 など"></textarea>
+    </div>
+
+    <button class="run-btn" id="runBtn" onclick="runScreening()">
+      <span>🤖</span> 投資のプロとして厳しく分析する
+    </button>
+
+    <div class="result-section" id="resultSection">
+      <div class="ai-output" id="aiOutput">
+        <div class="ai-label">
+          <div class="ai-dot"></div>
+          <span style="font-size:11px;color:var(--text-muted);font-family:'Space Mono',monospace;">プロ投資家視点の分析</span>
+          <span class="ai-engine-badge engine-claude" id="screenEngineBadge">Claude</span>
+        </div>
+        <div id="aiText"><div class="loading"><div class="spinner"></div>分析中...</div></div>
+      </div>
+      <div class="memo-section" id="memoSection" style="display:none">
+        <div class="memo-label">📝 この分析の評価（次回に反映）</div>
+        <div class="memo-btns">
+          <button class="memo-btn good" id="memoGood" onclick="toggleMemo('good')">👍 参考になった</button>
+          <button class="memo-btn bad" id="memoBad" onclick="toggleMemo('bad')">👎 あまり参考にならなかった</button>
+        </div>
+        <input type="text" class="memo-input" id="memoText" placeholder="気づき・感想をメモ（任意）">
+        <button class="memo-save-btn" onclick="saveMemo()">✅ メモを保存</button>
+      </div>
+      <button class="copy-btn" onclick="copyEl('aiText')">📋 コピー</button>
+      <div class="disclaimer"><strong>⚠️ 重要：</strong>投資助言ではありません。最終判断はご自身でお願いします。</div>
+    </div>
+  </div>
+
+  <!-- ========== TAB: 銘柄調査 ========== -->
+  <div class="tab-content" id="tab-research">
+
+    <div class="section">
+      <h2>🔍 銘柄調査・投資判断AI</h2>
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.7;">
+        気になる銘柄名または証券コードを入力してください。AIが最新情報を調査し、プロ投資家として「買うべきか否か」を分析します。<br>
+        結果は <strong style="color:var(--accent4)">iSpeed アプリのメモ</strong> にそのままコピーできる形式で出力されます。
+      </p>
+      <label>銘柄名または証券コード</label>
+      <div class="stock-input-row">
+        <input type="text" id="stockInput" placeholder="例：トヨタ自動車 / 7203 / ソニーグループ" onkeydown="if(event.key==='Enter')researchStock()">
+        <button class="search-btn" id="researchBtn" onclick="researchStock()">🔍 調査する</button>
+      </div>
+      <div style="margin-top:12px">
+        <label>投資期間・スタイル（任意）</label>
+        <select id="researchStyle">
+          <option value="">選択しない（AIに任せる）</option>
+          <option value="短期（1〜3ヶ月）">短期（1〜3ヶ月）</option>
+          <option value="中期（3〜12ヶ月）">中期（3〜12ヶ月）</option>
+          <option value="長期（1年以上）">長期（1年以上）</option>
+        </select>
+      </div>
+      <div style="margin-top:12px">
+        <label>追加の質問・希望（任意）</label>
+        <textarea id="researchComment" placeholder="例：最近決算が良かったと聞いた、同業他社と比べてどうか など"></textarea>
+      </div>
+
+      <div style="margin-top:14px">
+        <label>📸 チャート・資料の画像（任意・複数枚OK）</label>
+        <div class="image-upload-area" id="uploadArea"
+          ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          <input type="file" id="imageInput" accept="image/*" multiple onchange="handleImageSelect(event)">
+          <div class="upload-icon">📊</div>
+          <div class="upload-text">クリックまたはドラッグ＆ドロップで画像を追加</div>
+          <div class="upload-hint">iSpeedのチャートスクリーンショットなど（JPG・PNG・複数枚対応）</div>
+        </div>
+        <div class="image-previews" id="imagePreviews"></div>
+        <div id="imageCountBadge" style="display:none" class="image-count-badge"></div>
+      </div>
+    </div>
+
+    <button class="run-btn" id="researchRunBtn" onclick="researchStock()" style="background:linear-gradient(135deg,var(--accent4),#7c3aed);color:#fff;">
+      <span>🔍</span> 最新情報を調べて投資判断してもらう
+    </button>
+
+    <div class="result-section" id="researchResultSection">
+      <!-- AI詳細分析 -->
+      <div class="ai-output" id="researchOutput" style="margin-top:20px">
+        <div class="ai-label">
+          <div class="ai-dot" style="background:var(--accent4)"></div>
+          <span style="font-size:11px;color:var(--text-muted);font-family:'Space Mono',monospace;">銘柄調査・投資判断レポート</span>
+          <span class="ai-engine-badge engine-claude" id="researchEngineBadge">Claude</span>
+        </div>
+        <div id="researchText"><div class="loading"><div class="spinner"></div>調査中...</div></div>
+      </div>
+
+      <!-- iSpeed コピー用出力 -->
+      <div class="ispeed-output" id="ispeedOutput" style="display:none">
+        <div class="ispeed-label">
+          📱 iSpeed メモ用（コピー＆ペーストしてご利用ください）
+        </div>
+        <button class="copy-ispeed-btn" onclick="copyIspeed()">📋 コピー</button>
+        <div class="ispeed-text" id="ispeedText"></div>
+      </div>
+
+      <div class="disclaimer" style="margin-top:14px">
+        <strong>⚠️ 重要：</strong>AIによる情報提供であり<strong>投資助言ではありません</strong>。目標株価・損切り価格はAIの推定です。最新株価・財務データは証券会社でご確認の上、<strong>投資はご自身の判断と責任</strong>でお願いします。
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TAB: 履歴 ========== -->
+  <div class="tab-content" id="tab-history">
+    <div class="section">
+      <div class="section-row">
+        <h2 style="margin:0">📋 検索履歴とメモ</h2>
+        <button class="clear-btn" onclick="clearHistory()">すべて削除</button>
+      </div>
+      <div id="historyList"><div class="empty-state">まだ履歴がありません</div></div>
+    </div>
+  </div>
+
+  <!-- ========== TAB: 傾向分析 ========== -->
+  <div class="tab-content" id="tab-trend">
+    <div class="section">
+      <div id="trendStats" class="stat-row" style="display:none"></div>
+      <button class="analyze-trend-btn" id="trendBtn" onclick="analyzeTrend()">
+        <span>🧠</span> AIが過去の傾向を深掘り分析する
+      </button>
+      <div class="trend-summary-output" id="trendOutput">
+        <span style="color:var(--text-muted);font-size:12px">履歴・メモをもとに、あなたの投資傾向・改善点・次回へのアドバイスをまとめます。</span>
+      </div>
+      <button class="copy-btn" onclick="copyEl('trendOutput')">📋 コピー</button>
+    </div>
+  </div>
+
+  <!-- ========== TAB: 設定 ========== -->
+  <div class="tab-content" id="tab-settings">
+
+    <!-- 使用状況 -->
+    <div class="usage-panel">
+      <div class="usage-title">📊 本日のAPI使用状況（このブラウザで計測）</div>
+      <div class="usage-bars" id="usageBars"></div>
+      <div class="usage-note" id="usageNote"></div>
+    </div>
+
+    <!-- Claude説明 -->
+    <div class="settings-section">
+      <h2>🤖 Claude（メインAI）</h2>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+        このアプリはAnthropicの<strong style="color:var(--accent)">Claude</strong>をメインのAIとして使用しています。<br>
+        claude.aiの<strong>Proプラン</strong>（月額約$20）では1日あたりのメッセージ数に上限があります。<br>
+        上限に近づいた場合、下のGeminiをバックアップとして自動的に切り替えることができます。
+      </p>
+    </div>
+
+    <!-- Gemini設定 -->
+    <div class="settings-section">
+      <h2>⭐ Gemini（バックアップAI）</h2>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:14px;">
+        GoogleのGeminiをバックアップとして設定できます。Claudeが利用できない場合に自動切り替えします。
+      </p>
+
+      <label>Gemini APIキー</label>
+      <input type="password" id="geminiKeyInput" placeholder="AIzaSy... （Google AI StudioのAPIキー）">
+      <div id="geminiStatus" class="api-status none">● 未設定</div>
+      <br>
+      <button class="save-key-btn" onclick="saveGeminiKey()">💾 保存する</button>
+      <button class="clear-key-btn" onclick="clearGeminiKey()">🗑️ 削除</button>
+
+      <div class="info-box">
+        <strong style="color:var(--accent4)">📖 Gemini APIキーの取得方法（無料・5分）</strong><br><br>
+        1. <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a> にアクセス（Googleアカウントでログイン）<br>
+        2. 「Get API key」→「Create API key」をクリック<br>
+        3. 表示されたキー（AIzaSy...で始まる文字列）をコピー<br>
+        4. 上の入力欄に貼り付けて「保存する」を押す<br><br>
+        <strong style="color:var(--accent3)">⚠️ 無料枠：</strong>Gemini 2.0 Flashは1分15リクエスト、1日1,500リクエストまで無料。株の分析には十分です。<br><br>
+        <strong>🔒 セキュリティ：</strong>APIキーはこのブラウザのローカルストレージにのみ保存されます。外部サーバーには送信しません。
+      </div>
+    </div>
+
+    <!-- 自動切り替え設定 -->
+    <div class="settings-section">
+      <h2>🔄 AI自動切り替え設定</h2>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <label style="margin:0;font-size:14px;color:var(--text);">Claudeでエラーが出た場合、自動的にGeminiに切り替える</label>
+        <input type="checkbox" id="autoSwitch" style="width:auto;accent-color:var(--accent);" checked>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);line-height:1.6;">
+        チェックを入れると、Claudeが利用制限に達した場合などにGeminiへ自動で切り替わります。<br>
+        切り替えが起きた際は分析結果の上部に「Gemini使用」と表示されます。
+      </p>
+    </div>
+  </div>
+</main>
+
+<script>
+const STORAGE_KEY = 'ai_stock_screener_v3';
+const USAGE_KEY = 'ai_screener_usage';
+const GEMINI_KEY = 'gemini_api_key';
+let currentEntryId = null;
+let memoEval = null;
+
+// ===== STORAGE =====
+function getStorage() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"entries":[],"trendSummary":""}'); }
+  catch { return { entries: [], trendSummary: '' }; }
+}
+function saveStorage(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+function getGeminiKey() { return localStorage.getItem(GEMINI_KEY) || ''; }
+
+// ===== USAGE TRACKING =====
+function getUsage() {
+  const today = new Date().toDateString();
+  try {
+    const u = JSON.parse(localStorage.getItem(USAGE_KEY) || '{}');
+    if (u.date !== today) return { date: today, claude: 0, gemini: 0 };
+    return u;
+  } catch { return { date: today, claude: 0, gemini: 0 }; }
+}
+function addUsage(engine) {
+  const u = getUsage();
+  u[engine] = (u[engine] || 0) + 1;
+  localStorage.setItem(USAGE_KEY, JSON.stringify(u));
+  renderUsage();
+}
+function renderUsage() {
+  const u = getUsage();
+  const total = (u.claude || 0) + (u.gemini || 0);
+  document.getElementById('usageBadgeHeader').textContent = `📊 使用: ${total}回`;
+
+  const barsEl = document.getElementById('usageBars');
+  const noteEl = document.getElementById('usageNote');
+  if (!barsEl) return;
+
+  // Claude上限は厳密には不明なので目安表示
+  const claudeLimit = 40; // 目安（実際はプランによる）
+  const geminiLimit = 1500;
+  const claudePct = Math.min(100, ((u.claude||0) / claudeLimit) * 100);
+  const geminiPct = Math.min(100, ((u.gemini||0) / geminiLimit) * 100);
+  const claudeColor = claudePct > 80 ? '#ff6b6b' : claudePct > 50 ? '#ffd166' : '#00d4aa';
+
+  barsEl.innerHTML = `
+    <div class="usage-bar-row">
+      <div class="usage-bar-label">Claude</div>
+      <div class="usage-bar-bg"><div class="usage-bar-fill" style="width:${claudePct}%;background:${claudeColor}"></div></div>
+      <div class="usage-bar-count">${u.claude||0} / 約${claudeLimit}回</div>
+    </div>
+    <div class="usage-bar-row">
+      <div class="usage-bar-label">Gemini</div>
+      <div class="usage-bar-bg"><div class="usage-bar-fill" style="width:${geminiPct}%;background:#ffd166"></div></div>
+      <div class="usage-bar-count">${u.gemini||0} / ${geminiLimit}回</div>
+    </div>`;
+
+  let note = '⚠️ Claudeの回数はこのアプリ内での使用回数です（目安）。実際の制限はclaude.aiのプランによります。';
+  if ((u.claude||0) >= claudeLimit * 0.8) {
+    note += '\n🔴 Claudeの使用回数が多くなっています。Gemini APIキーを設定しておくと安心です。';
+  }
+  noteEl.textContent = note;
+}
+
+// ===== TAB SWITCH =====
+function switchTab(name) {
+  const names = ['screen','research','history','trend','settings'];
+  names.forEach((n,i) => {
+    document.querySelectorAll('.tab')[i].classList.toggle('active', n===name);
+    document.getElementById('tab-'+n).classList.toggle('active', n===name);
+  });
+  if (name==='history') renderHistory();
+  if (name==='trend') renderTrendStats();
+  if (name==='settings') { renderUsage(); renderGeminiStatus(); }
+}
+
+// ===== UI HELPERS =====
+function toggleBtn(el) { el.classList.toggle('active'); }
+function selectStyle(el) {
+  document.querySelectorAll('.style-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function getConditions() {
+  return {
+    per_min:document.getElementById('per_min').value,
+    per_max:document.getElementById('per_max').value,
+    pbr_min:document.getElementById('pbr_min').value,
+    pbr_max:document.getElementById('pbr_max').value,
+    div_min:document.getElementById('div_min').value,
+    div_max:document.getElementById('div_max').value,
+    roe_min:document.getElementById('roe_min').value,
+    growth_min:document.getElementById('growth_min').value,
+    technicals:[...document.querySelectorAll('.toggle-btn.active')].map(b=>b.dataset.val),
+    style:document.querySelector('.style-card.active')?.dataset.style||null,
+    comment:document.getElementById('comment').value
+  };
+}
+function conditionSummary(c) {
+  const p=[];
+  if(c.per_max) p.push(`PER≤${c.per_max}`);
+  if(c.pbr_max) p.push(`PBR≤${c.pbr_max}`);
+  if(c.div_min) p.push(`配当≥${c.div_min}%`);
+  if(c.roe_min) p.push(`ROE≥${c.roe_min}%`);
+  if(c.style) p.push(c.style.split('（')[0]);
+  return p.length?p.join(' · '):'AI任せ';
+}
+
+// ===== API CALL WITH FALLBACK =====
+async function callAI(prompt, useWebSearch=false, engineBadgeId=null) {
+  const autoSwitch = document.getElementById('autoSwitch')?.checked !== false;
+  const geminiKey = getGeminiKey();
+
+  // Try Claude first
+  try {
+    const body = {
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    };
+    if (useWebSearch) {
+      body.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
+    }
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (res.status === 429 || res.status === 529) throw new Error('rate_limit');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || 'claude_error');
+    const text = data.content?.map(b => b.text || '').filter(Boolean).join('') || '';
+    if (!text) throw new Error('empty_response');
+    addUsage('claude');
+    if (engineBadgeId) {
+      const el = document.getElementById(engineBadgeId);
+      if (el) { el.textContent = 'Claude'; el.className = 'ai-engine-badge engine-claude'; }
+    }
+    return text;
+  } catch (claudeErr) {
+    // Fallback to Gemini
+    if (autoSwitch && geminiKey) {
+      try {
+        const geminiBody = {
+          contents: [{ parts: [{ text: prompt }] }],
+          tools: [{ google_search: {} }]
+        };
+        const gRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geminiBody) }
+        );
+        const gData = await gRes.json();
+        if (gData.error) throw new Error(gData.error.message);
+        const text = gData.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('') || '';
+        if (!text) throw new Error('gemini_empty');
+        addUsage('gemini');
+        if (engineBadgeId) {
+          const el = document.getElementById(engineBadgeId);
+          if (el) { el.textContent = 'Gemini'; el.className = 'ai-engine-badge engine-gemini'; }
+        }
+        return text;
+      } catch (geminiErr) {
+        throw new Error(`Claude: ${claudeErr.message} / Gemini: ${geminiErr.message}`);
+      }
+    }
+    throw claudeErr;
+  }
+}
+
+// ===== SCREENING PROMPT =====
+function buildScreeningPrompt(c, pastTrend) {
+  let p = `あなたは20年以上の経験を持つプロの株式アナリストです。感情を排除し、データと論理に基づいて厳しく・正直に分析してください。初心者にも理解できるよう丁寧に、しかし甘やかさず本質を伝えてください。
+
+## スクリーニング条件（東証・日本株）
+`;
+  if(c.per_min||c.per_max) p+=`- PER: ${c.per_min||'下限なし'}〜${c.per_max||'上限なし'}倍\n`;
+  if(c.pbr_min||c.pbr_max) p+=`- PBR: ${c.pbr_min||'下限なし'}〜${c.pbr_max||'上限なし'}倍\n`;
+  if(c.div_min||c.div_max) p+=`- 配当利回り: ${c.div_min||'下限なし'}〜${c.div_max||'上限なし'}%\n`;
+  if(c.roe_min) p+=`- ROE: ${c.roe_min}%以上\n`;
+  if(c.growth_min) p+=`- 売上成長率: ${c.growth_min}%以上\n`;
+  if(c.technicals?.length) p+=`- テクニカル条件: ${c.technicals.join('、')}\n`;
+  if(c.style) p+=`- 投資スタイル: ${c.style}\n`;
+  if(c.comment) p+=`- 希望: ${c.comment}\n`;
+  if(pastTrend?.trim()) p+=`\n## このユーザーの過去の投資傾向\n${pastTrend}\nこの傾向を踏まえて提案してください。\n`;
+  p+=`
+## 出力形式
+
+### 1. 条件設定のプロ評価
+強み・弱み・矛盾点を率直に評価。無謀・甘すぎる条件は指摘。
+
+### 2. 現在の日本市場の概況
+マクロ環境・注目セクター・主なリスク要因を簡潔に。
+
+### 3. おすすめ候補銘柄 TOP5〜8
+各銘柄：銘柄名・証券コード・業種 / 条件合致の理由 / ビジネスと競争優位性 / ⚠️リスク（必須） / 向いている投資家タイプ
+
+### 4. プロからの厳しい一言
+初心者が陥りやすい罠・注意点・分散投資の重要性を率直に。`;
+  return p;
+}
+
+// ===== RUN SCREENING =====
+async function runScreening() {
+  const btn=document.getElementById('runBtn');
+  const resultSection=document.getElementById('resultSection');
+  const aiText=document.getElementById('aiText');
+  btn.disabled=true; btn.innerHTML='<div class="spinner" style="border-top-color:#0a0e1a;width:15px;height:15px;border-width:2px"></div> 分析中...';
+  resultSection.classList.add('show');
+  document.getElementById('memoSection').style.display='none';
+  memoEval=null;
+  aiText.innerHTML='<div class="loading"><div class="spinner"></div>プロ投資家視点で分析中...</div>';
+  resultSection.scrollIntoView({behavior:'smooth',block:'start'});
+  const conditions=getConditions();
+  const storage=getStorage();
+  try {
+    const text = await callAI(buildScreeningPrompt(conditions, storage.trendSummary), false, 'screenEngineBadge');
+    aiText.textContent=text;
+    const entry={id:Date.now(),date:new Date().toLocaleString('ja-JP'),type:'screen',conditions,result:text,eval:null,memo:''};
+    storage.entries.unshift(entry);
+    if(storage.entries.length>30) storage.entries=storage.entries.slice(0,30);
+    saveStorage(storage);
+    currentEntryId=entry.id;
+    document.getElementById('memoSection').style.display='block';
+    document.getElementById('memoGood').classList.remove('active');
+    document.getElementById('memoBad').classList.remove('active');
+    document.getElementById('memoText').value='';
+  } catch(err) {
+    aiText.innerHTML=`<span style="color:var(--accent2)">⚠️ エラー: ${err.message}${!getGeminiKey()?' / Geminiをバックアップとして設定するとより安定します（設定タブ）':''}</span>`;
+  }
+  btn.disabled=false; btn.innerHTML='<span>🤖</span> 投資のプロとして厳しく分析する';
+}
+
+// ===== IMAGE HANDLING =====
+let uploadedImages = []; // [{base64, mediaType, name}]
+
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('uploadArea').classList.add('dragover');
+}
+function handleDragLeave(e) {
+  document.getElementById('uploadArea').classList.remove('dragover');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadArea').classList.remove('dragover');
+  processImageFiles([...e.dataTransfer.files]);
+}
+function handleImageSelect(e) {
+  processImageFiles([...e.target.files]);
+  e.target.value = ''; // reset so same file can be re-added
+}
+function processImageFiles(files) {
+  const imageFiles = files.filter(f => f.type.startsWith('image/'));
+  if (!imageFiles.length) return;
+  imageFiles.forEach(file => {
+    if (uploadedImages.length >= 5) { alert('画像は最大5枚まで追加できます'); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target.result.split(',')[1];
+      const mediaType = file.type;
+      uploadedImages.push({ base64, mediaType, name: file.name, preview: e.target.result });
+      renderImagePreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function removeImage(idx) {
+  uploadedImages.splice(idx, 1);
+  renderImagePreviews();
+}
+function renderImagePreviews() {
+  const container = document.getElementById('imagePreviews');
+  const badge = document.getElementById('imageCountBadge');
+  if (!uploadedImages.length) {
+    container.innerHTML = '';
+    badge.style.display = 'none';
+    return;
+  }
+  container.innerHTML = uploadedImages.map((img, i) => `
+    <div class="image-preview-item">
+      <img src="${img.preview}" alt="${img.name}">
+      <button class="remove-img" onclick="removeImage(${i})">✕</button>
+    </div>
+  `).join('');
+  badge.style.display = 'inline-block';
+  badge.textContent = `📸 ${uploadedImages.length}枚の画像が追加されています`;
+}
+function clearImages() {
+  uploadedImages = [];
+  renderImagePreviews();
+}
+
+// ===== RESEARCH STOCK =====
+async function researchStock() {
+  const stockName = document.getElementById('stockInput').value.trim();
+  if (!stockName) { alert('銘柄名または証券コードを入力してください'); return; }
+
+  const style = document.getElementById('researchStyle').value;
+  const comment = document.getElementById('researchComment').value;
+  const hasImages = uploadedImages.length > 0;
+
+  const btn = document.getElementById('researchRunBtn');
+  const btn2 = document.getElementById('researchBtn');
+  const resultSection = document.getElementById('researchResultSection');
+  const researchText = document.getElementById('researchText');
+  const ispeedOutput = document.getElementById('ispeedOutput');
+
+  btn.disabled=true; btn2.disabled=true;
+  btn.innerHTML='<div class="spinner" style="border-top-color:#fff;width:15px;height:15px;border-width:2px"></div> 調査・分析中...';
+  resultSection.classList.add('show');
+  ispeedOutput.style.display='none';
+  researchText.innerHTML=`<div class="loading"><div class="spinner"></div>${hasImages?'画像を読み込んで分析中...':'最新情報を調査中（Web検索含む）...'}</div>`;
+  resultSection.scrollIntoView({behavior:'smooth',block:'start'});
+
+  const today = new Date().toLocaleDateString('ja-JP');
+  const imageNote = hasImages ? `\n\n添付画像${uploadedImages.length}枚（iSpeedのチャートスクリーンショット等）も合わせて分析してください。チャートのトレンド・移動平均・出来高・特徴的なパターンなどを読み取り、テクニカル分析に反映してください。` : '';
+
+  const promptText = `あなたは20年以上の経験を持つプロの株式アナリスト・ファンドマネージャーです。
+本日は${today}です。${imageNote}
+
+## 調査対象
+銘柄：${stockName}
+${style ? `投資期間：${style}` : ''}
+${comment ? `ユーザーの質問・希望：${comment}` : ''}
+
+## 指示
+以下の手順で厳密に分析してください。
+
+### ステップ1：最新情報の確認
+- 直近の決算情報・業績動向
+- 最近のニュース・材料（ポジティブ・ネガティブ両方）
+- アナリスト評価・目標株価
+- チャート・テクニカルの概況${hasImages ? '（添付画像も参照）' : ''}
+
+### ステップ2：ファンダメンタル分析
+- PER・PBR・配当利回り・ROEの評価（業界平均との比較）
+- 財務健全性（負債比率・キャッシュフロー）
+- ビジネスモデルの競争優位性
+
+### ステップ3：投資判断
+- **総合判断**：強く買い / 買い / 中立（様子見） / 売り / 強く売り
+- **確信度**：高 / 中 / 低
+- **推奨理由**（3〜5点）
+- **⚠️ リスク・懸念点**（3〜5点、必須・甘くしない）
+- **目標株価**：目標価格帯（現在比何%か）
+- **損切りライン**：損切りすべき価格帯（現在比何%下か）
+- **リスクリワード比**：（目標利益）÷（損切り損失）を計算
+
+### ステップ4：iSpeed メモ用サマリー
+最後に以下フォーマットで出力してください：
+
+===iSpeed メモ===
+【銘柄】${stockName}
+【分析日】${today}
+【判断】（強く買い/買い/中立/売り/強く売り）
+【確信度】（高/中/低）
+【現在株価目安】約〇〇円
+【目標株価】〇〇円（現在比+〇〇%）
+【損切りライン】〇〇円（現在比-〇〇%）
+【リスクリワード】1:〇（1の損失に対して〇の利益期待）
+${hasImages ? '【チャート所見】〇〇（添付画像から読み取った内容）\n' : ''}
+【買い推奨理由】
+・〇〇
+・〇〇
+・〇〇
+
+【リスク・懸念点】
+・〇〇（最重要）
+・〇〇
+・〇〇
+
+【直近の注目材料】
+〇〇
+
+【プロからの一言】
+〇〇
+===ここまで===`;
+
+  try {
+    let text;
+    const autoSwitch = document.getElementById('autoSwitch')?.checked !== false;
+    const geminiKey = getGeminiKey();
+
+    // Claude with images
+    try {
+      // Build message content with images
+      const contentParts = [];
+      // Add images first
+      if (hasImages) {
+        uploadedImages.forEach(img => {
+          contentParts.push({ type: 'image', source: { type: 'base64', media_type: img.mediaType, data: img.base64 } });
+        });
+      }
+      contentParts.push({ type: 'text', text: promptText });
+
+      const body = {
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: contentParts }]
+      };
+      // Web search only when no images (API limitation)
+      if (!hasImages) {
+        body.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
+      }
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.status === 429 || res.status === 529) throw new Error('rate_limit');
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message || 'claude_error');
+      text = data.content?.map(b => b.text || '').filter(Boolean).join('') || '';
+      if (!text) throw new Error('empty_response');
+      addUsage('claude');
+      const badge = document.getElementById('researchEngineBadge');
+      if (badge) { badge.textContent = 'Claude'; badge.className = 'ai-engine-badge engine-claude'; }
+
+    } catch (claudeErr) {
+      if (autoSwitch && geminiKey) {
+        // Gemini fallback (text only when images fail)
+        const gBody = {
+          contents: [{ parts: [{ text: promptText }] }],
+          tools: [{ google_search: {} }]
+        };
+        const gRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(gBody) }
+        );
+        const gData = await gRes.json();
+        if (gData.error) throw new Error(`Claude: ${claudeErr.message} / Gemini: ${gData.error.message}`);
+        text = gData.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('') || '';
+        if (!text) throw new Error('gemini empty response');
+        addUsage('gemini');
+        const badge = document.getElementById('researchEngineBadge');
+        if (badge) { badge.textContent = 'Gemini'; badge.className = 'ai-engine-badge engine-gemini'; }
+      } else {
+        throw claudeErr;
+      }
+    }
+
+    researchText.textContent = text;
+
+    // iSpeed用テキスト抽出
+    const match = text.match(/===iSpeed メモ===([\s\S]*?)===ここまで===/);
+    if (match) {
+      document.getElementById('ispeedText').textContent = match[1].trim();
+      ispeedOutput.style.display = 'block';
+    }
+
+    // 履歴保存
+    const storage = getStorage();
+    const entry = {
+      id: Date.now(), date: new Date().toLocaleString('ja-JP'), type: 'research',
+      stockName, imageCount: uploadedImages.length, result: text,
+      ispeed: match ? match[1].trim() : '', eval: null, memo: ''
+    };
+    storage.entries.unshift(entry);
+    if (storage.entries.length > 30) storage.entries = storage.entries.slice(0, 30);
+    saveStorage(storage);
+
+    // 画像クリア
+    clearImages();
+
+  } catch(err) {
+    researchText.innerHTML=`<span style="color:var(--accent2)">⚠️ エラー: ${err.message}${!getGeminiKey()?' / Geminiをバックアップとして設定するとより安定します（設定タブ）':''}</span>`;
+  }
+
+  btn.disabled=false; btn2.disabled=false;
+  btn.innerHTML='<span>🔍</span> 最新情報を調べて投資判断してもらう';
+}
+
+function copyIspeed() {
+  const text = document.getElementById('ispeedText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-ispeed-btn');
+    btn.textContent='✅ コピーしました！'; setTimeout(()=>btn.textContent='📋 コピー',2500);
+  });
+}
+
+// ===== MEMO =====
+function toggleMemo(type) {
+  memoEval=type;
+  document.getElementById('memoGood').classList.toggle('active',type==='good');
+  document.getElementById('memoBad').classList.toggle('active',type==='bad');
+}
+function saveMemo() {
+  if(!currentEntryId) return;
+  const storage=getStorage();
+  const entry=storage.entries.find(e=>e.id===currentEntryId);
+  if(entry){entry.eval=memoEval;entry.memo=document.getElementById('memoText').value;saveStorage(storage);}
+  const btn=document.querySelector('.memo-save-btn');
+  btn.textContent='✅ 保存しました！'; setTimeout(()=>btn.textContent='✅ メモを保存',2000);
+}
+
+// ===== HISTORY =====
+function renderHistory() {
+  const storage=getStorage();
+  const el=document.getElementById('historyList');
+  if(!storage.entries.length){el.innerHTML='<div class="empty-state">まだ履歴がありません</div>';return;}
+  el.innerHTML=storage.entries.map(h=>{
+    const evalBadge=h.eval==='good'?'<span class="history-eval eval-good">👍 参考になった</span>':
+      h.eval==='bad'?'<span class="history-eval eval-bad">👎 あまり参考にならなかった</span>':'';
+    const memoLine=h.memo?`<div class="history-memo">📝 ${h.memo}</div>`:'';
+    const typeLabel=h.type==='research'?`🔍 銘柄調査: ${h.stockName||''}`:`📊 ${conditionSummary(h.conditions||{})}`;
+    const ispeedBtn=h.ispeed?`<button class="h-btn" onclick="showIspeed(${h.id})">📱 iSpeedメモを見る</button>`:'';
+    return `<div class="history-item">
+      <div class="history-header">
+        <div>
+          <div class="history-meta">${h.date}</div>
+          <div class="history-summary">${typeLabel}</div>
+          ${evalBadge}${memoLine}
+        </div>
+        <button class="del-btn" onclick="deleteEntry(${h.id})">✕</button>
+      </div>
+      <div class="history-actions">
+        <button class="h-btn" onclick="showResult(${h.id})">📄 結果を見る</button>
+        ${h.type!=='research'?`<button class="h-btn" onclick="restoreConditions(${h.id})">🔄 同じ条件で再実行</button>`:''}
+        ${ispeedBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showResult(id) {
+  const entry=getStorage().entries.find(e=>e.id===id);
+  if(!entry) return;
+  if(entry.type==='research') {
+    switchTab('research');
+    document.getElementById('stockInput').value=entry.stockName||'';
+    document.getElementById('researchText').textContent=entry.result;
+    document.getElementById('researchResultSection').classList.add('show');
+    const ispeedOutput=document.getElementById('ispeedOutput');
+    if(entry.ispeed){document.getElementById('ispeedText').textContent=entry.ispeed;ispeedOutput.style.display='block';}
+    else ispeedOutput.style.display='none';
+  } else {
+    switchTab('screen');
+    document.getElementById('aiText').textContent=entry.result;
+    document.getElementById('resultSection').classList.add('show');
+    document.getElementById('memoSection').style.display='none';
+  }
+  setTimeout(()=>document.querySelector('.result-section.show')?.scrollIntoView({behavior:'smooth'}),100);
+}
+
+function showIspeed(id) {
+  const entry=getStorage().entries.find(e=>e.id===id);
+  if(!entry||!entry.ispeed) return;
+  switchTab('research');
+  document.getElementById('stockInput').value=entry.stockName||'';
+  document.getElementById('researchText').textContent=entry.result;
+  document.getElementById('researchResultSection').classList.add('show');
+  document.getElementById('ispeedText').textContent=entry.ispeed;
+  document.getElementById('ispeedOutput').style.display='block';
+  setTimeout(()=>document.getElementById('ispeedOutput').scrollIntoView({behavior:'smooth'}),100);
+}
+
+function restoreConditions(id) {
+  const entry=getStorage().entries.find(e=>e.id===id);
+  if(!entry) return;
+  const c=entry.conditions;
+  switchTab('screen');
+  ['per_min','per_max','pbr_min','pbr_max','div_min','div_max','roe_min','growth_min'].forEach(k=>{
+    const el=document.getElementById(k); if(el) el.value=c[k]||'';});
+  document.getElementById('comment').value=c.comment||'';
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.toggle('active',c.technicals?.includes(b.dataset.val)));
+  document.querySelectorAll('.style-card').forEach(b=>b.classList.toggle('active',b.dataset.style===c.style));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function deleteEntry(id) {
+  const s=getStorage(); s.entries=s.entries.filter(e=>e.id!==id); saveStorage(s); renderHistory();
+}
+function clearHistory() {
+  if(confirm('すべての履歴を削除しますか？')){const s=getStorage();s.entries=[];saveStorage(s);renderHistory();}
+}
+
+// ===== TREND =====
+function renderTrendStats() {
+  const storage=getStorage();
+  const entries=storage.entries;
+  const el=document.getElementById('trendStats');
+  if(!entries.length){el.style.display='none';return;}
+  const good=entries.filter(e=>e.eval==='good').length;
+  const bad=entries.filter(e=>e.eval==='bad').length;
+  el.style.display='grid';
+  el.innerHTML=`
+    <div class="stat-card"><div class="stat-num">${entries.length}</div><div class="stat-label">総分析回数</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--accent)">👍 ${good}</div><div class="stat-label">参考になった</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--accent2)">👎 ${bad}</div><div class="stat-label">あまり参考にならなかった</div></div>`;
+}
+async function analyzeTrend() {
+  const storage=getStorage();
+  if(!storage.entries.length){document.getElementById('trendOutput').textContent='まず1回以上スクリーニングまたは銘柄調査を実行してください。';return;}
+  const btn=document.getElementById('trendBtn');
+  btn.disabled=true; btn.innerHTML='<div class="spinner" style="border-top-color:var(--accent3);width:15px;height:15px;border-width:2px"></div> 分析中...';
+  document.getElementById('trendOutput').innerHTML='<div class="loading"><div class="spinner"></div>AIが履歴を深く分析しています...</div>';
+  const summaries=storage.entries.slice(0,15).map((e,i)=>{
+    if(e.type==='research') return `[${i+1}] 銘柄調査: ${e.stockName} / 評価: ${e.eval==='good'?'参考になった':e.eval==='bad'?'あまり参考にならなかった':'未評価'} / メモ: ${e.memo||'なし'}`;
+    return `[${i+1}] スクリーニング: ${conditionSummary(e.conditions||{})} / 評価: ${e.eval==='good'?'参考になった':e.eval==='bad'?'あまり参考にならなかった':'未評価'} / メモ: ${e.memo||'なし'}`;
+  }).join('\n');
+  const prompt=`プロの投資アドバイザーとして、以下のユーザーの投資活動履歴を分析してください。
+
+## 履歴
+${summaries}
+
+### 1. 投資傾向の診断（どんなスタイルを好むか、何を重視しているか）
+### 2. 良い点・改善すべき点（率直に）
+### 3. 次回への具体的なアドバイス
+### 4. 傾向まとめ（150字以内）：スクリーニング画面に常時表示するための短いまとめ`;
+  try {
+    const text=await callAI(prompt,false,null);
+    document.getElementById('trendOutput').textContent=text;
+    const match=text.match(/傾向まとめ[^\n]*\n+([\s\S]{1,200})/);
+    const shortSummary=match?match[1].trim():text.slice(0,200);
+    storage.trendSummary=shortSummary; saveStorage(storage); updateTrendPanel();
+  } catch(err) {
+    document.getElementById('trendOutput').innerHTML=`<span style="color:var(--accent2)">⚠️ エラー: ${err.message}</span>`;
+  }
+  btn.disabled=false; btn.innerHTML='<span>🧠</span> AIが過去の傾向を深掘り分析する';
+}
+function updateTrendPanel() {
+  const storage=getStorage();
+  const el=document.getElementById('trendSummary');
+  if(!storage.trendSummary){el.innerHTML='<span class="trend-empty">まだデータがありません。分析を重ねると傾向が蓄積・表示されます。</span>';return;}
+  const div=document.createElement('div');
+  div.className='trend-text';
+  div.textContent=storage.trendSummary.slice(0,300)+(storage.trendSummary.length>300?'…':'');
+  el.innerHTML=''; el.appendChild(div);
+}
+
+// ===== GEMINI SETTINGS =====
+function renderGeminiStatus() {
+  const key=getGeminiKey();
+  const el=document.getElementById('geminiStatus');
+  if(!el) return;
+  if(key){el.textContent='● 設定済み';el.className='api-status ok';}
+  else{el.textContent='● 未設定';el.className='api-status none';}
+  document.getElementById('geminiKeyInput').value=key?'●'.repeat(20):'';
+}
+function saveGeminiKey() {
+  const val=document.getElementById('geminiKeyInput').value.trim();
+  if(!val||val.startsWith('●')) return;
+  localStorage.setItem(GEMINI_KEY,val);
+  renderGeminiStatus();
+  const btn=document.querySelector('.save-key-btn');
+  btn.textContent='✅ 保存しました！'; setTimeout(()=>btn.textContent='💾 保存する',2000);
+}
+function clearGeminiKey() {
+  if(confirm('Gemini APIキーを削除しますか？')){localStorage.removeItem(GEMINI_KEY);renderGeminiStatus();}
+}
+
+// ===== COPY HELPERS =====
+function copyEl(id) {
+  const text=document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=event.target; btn.textContent='✅ コピーしました'; setTimeout(()=>btn.textContent='📋 コピー',2000);
+  });
+}
+
+// ===== INIT =====
+updateTrendPanel();
+renderUsage();
+renderGeminiStatus();
+</script>
+</body>
+</html>
